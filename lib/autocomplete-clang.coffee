@@ -185,17 +185,23 @@ module.exports =
       if match isnt null
         lines = candidate.split '\n'
         continue if lines.length < 2
-        declTerms = lines[1].split ' '
-        [_,_,declRangeStr,_,posStr,...] = declTerms
-        [_,_,_,_,declRangeStr,_,posStr,...] = declTerms if declRangeStr is "prev"
-        [file,line,col] = declRangeStr[1..-2].split ':'
+        decl = lines[1].match(///\<(.+)\>\s(.+)\s///)
+        continue if decl is null
+        declStr = decl[1]
+        declRanges = declStr.split(', ')
+        positionStr = declRanges[0]
+        positions = declRanges[0].split(':')
+        [line, col] = positions.slice(-2)
+        file = positions.slice(0,-2).join(':')
+        posStr = decl[2]
         positions = posStr.match /(line|col):([0-9]+)(?::([0-9]+))?/
         if positions
           if positions[1] is 'line'
             [line,col] = [positions[2], positions[3]]
           else
             col = positions[2]
-        places.push [file,(Number line),(Number col)]
+        place = [file,(Number line),(Number col)]
+        places.push place
     return places
 
   handleEmitPchResult: (code)->
